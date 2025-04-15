@@ -10,9 +10,10 @@
       font-family: "Comic Sans MS", cursive, sans-serif;
       color: #ff0000;
       text-align: center;
+      margin-bottom: 100px;
     }
     marquee {
-      font-size: 48px;
+      font-size: 40px;
       font-weight: bold;
     }
     .section {
@@ -61,21 +62,25 @@
       margin-top: 5px;
       border: 2px dashed #000;
     }
-    .piano-key {
-      width: 60px;
-      height: 120px;
-      background-color: #fff;
-      border: 3px solid #000;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      box-shadow: 2px 4px #666;
-      transition: all 0.1s ease-in-out;
+    .keyboard {
+      display: flex;
+      justify-content: center;
+      margin-top: 30px;
+      flex-wrap: wrap;
     }
-    .piano-key:active {
-      background-color: #ffcccc;
-      transform: translateY(2px);
-      box-shadow: 1px 2px #444;
+    .key {
+      background-color: #444;
+      color: white;
+      border: 2px solid #888;
+      border-radius: 8px;
+      margin: 5px;
+      padding: 15px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      min-width: 80px;
+    }
+    .key:hover {
+      background-color: #666;
     }
   </style>
 </head>
@@ -116,20 +121,6 @@
     </table>
   </div>
 
-  <!-- Фарт-пианинка -->
-  <div class="section">
-    <h2>Фарт-пианинка</h2>
-    <div id="fartPiano" style="display: flex; justify-content: center; gap: 10px;">
-      <button class="piano-key" onclick="playFart(0)">До</button>
-      <button class="piano-key" onclick="playFart(1)">Ре</button>
-      <button class="piano-key" onclick="playFart(2)">Ми</button>
-      <button class="piano-key" onclick="playFart(3)">Фа</button>
-      <button class="piano-key" onclick="playFart(4)">Соль</button>
-      <button class="piano-key" onclick="playFart(5)">Ля</button>
-      <button class="piano-key" onclick="playFart(6)">Си</button>
-    </div>
-  </div>
-
   <button class="music-button" onclick="toggleMusic()">Вкл/Выкл музыку</button>
   <audio id="bgMusic" loop>
     <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
@@ -137,6 +128,20 @@
 
   <img src="https://media.tenor.com/V06eZMFzy9wAAAAC/fart-joke.gif" alt="funny fart gif">
   <footer><p>© 2025 Пердуны всего мира, объединяйтесь!</p></footer>
+
+  <!-- ПЕРДЁЖНАЯ ПИАНИНКА -->
+  <div class="section">
+    <h2>Пердёжная Пианинка</h2>
+    <div class="keyboard">
+      <div class="key" data-sound="0">До</div>
+      <div class="key" data-sound="1">Ре</div>
+      <div class="key" data-sound="2">Ми</div>
+      <div class="key" data-sound="3">Фа</div>
+      <div class="key" data-sound="4">Соль</div>
+      <div class="key" data-sound="5">Ля</div>
+      <div class="key" data-sound="6">Си</div>
+    </div>
+  </div>
 
   <!-- Firebase SDK -->
   <script type="module">
@@ -210,7 +215,7 @@
         top3List.appendChild(li);
       });
 
-      sorted.forEach(p => {
+      dataArr.forEach(p => {
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${p.name}</td>
@@ -226,6 +231,7 @@
 
         const option = new Option(p.name, p.id);
         voteSelect.add(option);
+
         totalVotes += p.votes;
 
         onSnapshot(collection(db, `participants/${p.id}/comments`), snap => {
@@ -255,22 +261,12 @@
       "Лучший пердун — тот, кто сделал это тихо, но громко в сердцах!",
       "Не тот пердун смешон, кто громко пёрнул, а тот, кто с гордостью ушёл!",
       "Фарт — не преступление, а искусство!",
-      "Пусть пердёж будет с тобой!",
-      "Вонючесть — это дар, а не проклятие!",
-      "Пердун — это не профессия, а призвание!",
-      "Если услышал — уже поздно.",
-      "Каждый пердун уникален — как снежинка.",
-      "Фарт в толпе — акт смелости.",
-      "Тише едешь — дальше пердишь.",
-      "Громкий пердеж — это к богатству.",
-      "Настоящий друг — тот, кто пердит с тобой.",
-      "Сначала звук, потом слава.",
-      "Пёрнул? Прими аплодисменты.",
-      "Не сдерживай природу — перди!",
-      "Шепот ануса — симфония души.",
-      "Пукай с чувством, с толком, с расстановкой!",
-      "Пердеж объединяет нации.",
-      "Кто не пёрнул — тот не жил!"
+      "Настоящий пердун не ищет славы — она находит его сама!",
+      "Пукнул — спас планету от перенаселения!",
+      "Пук — это когда душа на миг выходит наружу!",
+      "Кто пердит, тот не врет!",
+      "Пукай с гордостью — ты не один такой!",
+      "Фартист — это как артист, только гремит!"
     ];
     document.getElementById("jokeDisplay").textContent =
       jokes[Math.floor(Math.random() * jokes.length)];
@@ -281,23 +277,24 @@
       else music.pause();
     };
 
+    // Пианинка
     const fartSoundsList = [
-  "https://www.soundjay.com/human/fart-01.mp3", // До
-  "https://www.soundjay.com/human/fart-02.mp3", // Ре
-  "https://www.soundjay.com/human/fart-03.mp3", // Ми
-  "https://www.soundjay.com/human/fart-04.mp3", // Фа
-  "https://www.soundjay.com/human/fart-05.mp3", // Соль
-  "https://www.soundjay.com/human/fart-06.mp3", // Ля
-  "https://www.soundjay.com/human/fart-07.mp3"  // Си
-];
+      "https://cdn.pixabay.com/download/audio/2021/08/04/audio_1f3c7b3f2e.mp3?filename=fart-1-112636.mp3",
+      "https://cdn.pixabay.com/download/audio/2021/08/04/audio_3b9b2b3f2e.mp3?filename=fart-2-112637.mp3",
+      "https://cdn.pixabay.com/download/audio/2021/08/04/audio_5c9d4b3f2e.mp3?filename=fart-3-112638.mp3",
+      "https://cdn.pixabay.com/download/audio/2021/08/04/audio_7e9f6b3f2e.mp3?filename=fart-4-112639.mp3",
+      "https://cdn.pixabay.com/download/audio/2021/08/04/audio_9fab8b3f2e.mp3?filename=fart-5-112640.mp3",
+      "https://cdn.pixabay.com/download/audio/2021/08/04/audio_b1cdab3f2e.mp3?filename=fart-6-112641.mp3",
+      "https://cdn.pixabay.com/download/audio/2021/08/04/audio_d3efcb3f2e.mp3?filename=fart-7-112642.mp3"
+    ];
 
-
-
-
-    window.playFart = function(index) {
-      const audio = new Audio(fartSoundsList[index]);
-      audio.play();
-    };
+    document.querySelectorAll('.key').forEach(key => {
+      key.addEventListener('click', () => {
+        const index = key.getAttribute('data-sound');
+        const audio = new Audio(fartSoundsList[index]);
+        audio.play();
+      });
+    });
   </script>
 </body>
 </html>
