@@ -76,7 +76,7 @@
   <div class="section">
     <h2>Регистрация</h2>
     <input type="text" id="nameInput" placeholder="Имя пердуна">
-    <input type="file" id="audioInput" accept="audio/*">
+    <input type="text" id="linkInput" placeholder="Ссылка на пердеж (YouTube, VK...)">
     <button class="register-button" onclick="register()">Зарегистрироваться</button>
   </div>
 
@@ -95,7 +95,7 @@
   <div class="section">
     <h2>Наши Участники</h2>
     <table class="vote-table">
-      <thead><tr><th>Имя</th><th>Голосов</th><th>Комментарий</th><th>Запись</th></tr></thead>
+      <thead><tr><th>Имя</th><th>Слушать</th><th>Голоса</th><th>Комментарии</th></tr></thead>
       <tbody id="participantsTable"></tbody>
     </table>
   </div>
@@ -112,7 +112,6 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
     import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBicpiEJcEz62qguIvIkZ4F_ednV4IqEkA",
@@ -126,45 +125,34 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const storage = getStorage(app);
 
     const nameInput = document.getElementById("nameInput");
-    const audioInput = document.getElementById("audioInput");
+    const linkInput = document.getElementById("linkInput");
     const voteSelect = document.getElementById("voteSelect");
     const participantsTable = document.getElementById("participantsTable");
     const totalVotesDisplay = document.getElementById("totalVotes");
     const top3List = document.getElementById("top3List");
 
-    // Регистрация участника
     window.register = async function register() {
       const name = nameInput.value.trim();
-      if (!name || !audioInput.files.length) return alert("Введите имя и загрузите аудио");
+      const link = linkInput.value.trim();
+      if (!name || !link) return alert("Введите имя и ссылку");
 
-      // Загружаем аудио в Firebase Storage
-      const audioFile = audioInput.files[0];
-      const audioRef = ref(storage, 'audio/' + audioFile.name);
-      await uploadBytes(audioRef, audioFile);
-      const audioURL = await getDownloadURL(audioRef);
-
-      // Добавляем участника в Firestore
       await addDoc(collection(db, "participants"), {
         name,
-        votes: 0,
-        audioURL
+        link,
+        votes: 0
       });
 
       nameInput.value = "";
-      audioInput.value = "";
+      linkInput.value = "";
     };
 
-    // Голосование
     window.vote = async function vote() {
       const id = voteSelect.value;
-      if (!id) return alert("Выберите участника для голосования");
-
       const docRef = doc(db, "participants", id);
-      const docSnap = await getDocs(collection(db, "participants"));
-      docSnap.forEach(async (d) => {
+      const allDocs = await getDocs(collection(db, "participants"));
+      allDocs.forEach(async (d) => {
         if (d.id === id) {
           const currentVotes = d.data().votes || 0;
           await updateDoc(docRef, { votes: currentVotes + 1 });
@@ -172,7 +160,6 @@
       });
     };
 
-    // Обновление списка участников
     onSnapshot(collection(db, "participants"), async snapshot => {
       participantsTable.innerHTML = "";
       voteSelect.innerHTML = "";
@@ -197,9 +184,13 @@
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${p.name}</td>
+          <td><a href="${p.link}" target="_blank">Послушать</a></td>
           <td>${p.votes}</td>
-          <td><input type="text" placeholder="Ваш комментарий" id="commentInput-${p.id}" /></td>
-          <td><a href="${p.audioURL}" target="_blank">Прослушать</a></td>
+          <td>
+            <div id="comments-${p.id}" class="comment-box"></div>
+            <textarea id="commentInput-${p.id}" placeholder="Ваш комментарий"></textarea>
+            <button onclick="addComment('${p.id}')">Отправить</button>
+          </td>
         `;
         participantsTable.appendChild(row);
 
@@ -207,27 +198,43 @@
         voteSelect.add(option);
 
         totalVotes += p.votes;
+
+        // Подгрузка комментариев
+        onSnapshot(collection(db, `participants/${p.id}/comments`), snap => {
+          const commentBox = document.getElementById(`comments-${p.id}`);
+          commentBox.innerHTML = "";
+          snap.forEach(c => {
+            const div = document.createElement("div");
+            div.textContent = "— " + c.data().text;
+            commentBox.appendChild(div);
+          });
+        });
       });
 
       totalVotesDisplay.textContent = totalVotes;
     });
+
+    window.addComment = async function(id) {
+      const input = document.getElementById(`commentInput-${id}`);
+      const text = input.value.trim();
+      if (!text) return;
+      await addDoc(collection(db, `participants/${id}/comments`), { text });
+      input.value = "";
+    };
 
     // Случайная шутка
     const jokes = [
       "Пердеж — это аплодисменты задницы!",
       "Лучший пердун — тот, кто сделал это тихо, но громко в сердцах!",
       "Не тот пердун смешон, кто громко пёрнул, а тот, кто с гордостью ушёл!",
-      "Фарт — не преступление, а искусство!",
-      "Иногда пердеж — это весь смысл жизни!",
-      "Пердеж в лифте — это маленькое приключение!",
-      "Ты не пердун, если не чувствуешь своего собственного величия!"
+      "Фарт — не преступление, а искусство!"
     ];
     document.getElementById("jokeDisplay").textContent =
       jokes[Math.floor(Math.random() * jokes.length)];
 
-    // Включение/выключение музыки
+    // Музыка
+    const music = document.getElementById("bgMusic");
     window.toggleMusic = function () {
-      const music = document.getElementById("bgMusic");
       if (music.paused) music.play();
       else music.pause();
     };
