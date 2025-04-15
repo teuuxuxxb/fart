@@ -29,14 +29,15 @@
       margin: 10px;
       color: #000;
     }
-    .fart-button, .register-button {
+    .fart-button, .register-button, .music-button {
       padding: 10px 20px;
       font-size: 20px;
       background-color: #ff69b4;
       border: 3px solid #000;
       cursor: pointer;
+      margin: 5px;
     }
-    input, select {
+    input, select, textarea {
       font-size: 18px;
       padding: 5px;
       margin: 5px;
@@ -49,11 +50,28 @@
       border: 2px solid #000;
       padding: 5px 10px;
     }
+    .top3 {
+      background-color: #ffeeba;
+      padding: 10px;
+      margin-bottom: 15px;
+    }
+    .comment-box {
+      background-color: #fff;
+      padding: 10px;
+      margin-top: 5px;
+      border: 2px dashed #000;
+    }
   </style>
 </head>
 <body>
+
   <marquee scrollamount="10">Добро пожаловать на конкурс "ПЕРДУН ГОДА 2025"!</marquee>
-  <img src="https://media.tenor.com/UoUoOtrRxkMAAAAC/fart.gif" alt="fart gif">
+  <img src="https://media.tenor.com/UoUoOtrRxkMAAAAC/fart.gif" alt="fart gif"/>
+
+  <div class="section">
+    <h2>Случайная шутка дня</h2>
+    <p id="jokeDisplay"></p>
+  </div>
 
   <div class="section">
     <h2>Регистрация</h2>
@@ -69,21 +87,28 @@
     <p class="counter">Всего голосов: <span id="totalVotes">0</span></p>
   </div>
 
+  <div class="section top3">
+    <h2>Топ-3 Пердуна</h2>
+    <ul id="top3List"></ul>
+  </div>
+
   <div class="section">
     <h2>Наши Участники</h2>
     <table class="vote-table">
-      <thead>
-        <tr><th>Имя</th><th>Слушать</th><th>Голоса</th></tr>
-      </thead>
+      <thead><tr><th>Имя</th><th>Слушать</th><th>Голоса</th><th>Комментарии</th></tr></thead>
       <tbody id="participantsTable"></tbody>
     </table>
   </div>
 
-  <img src="https://media.tenor.com/V06eZMFzy9wAAAAC/fart-joke.gif" alt="funny fart gif">
-  <footer>
-    <p><blink>© 2025 Пердуны всего мира, объединяйтесь!</blink></p>
-  </footer>
+  <button class="music-button" onclick="toggleMusic()">Вкл/Выкл музыку</button>
+  <audio id="bgMusic" loop>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+  </audio>
 
+  <img src="https://media.tenor.com/V06eZMFzy9wAAAAC/fart-joke.gif" alt="funny fart gif">
+  <footer><p>© 2025 Пердуны всего мира, объединяйтесь!</p></footer>
+
+  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
     import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
@@ -92,7 +117,7 @@
       apiKey: "AIzaSyBicpiEJcEz62qguIvIkZ4F_ednV4IqEkA",
       authDomain: "fart-of-year-b5279.firebaseapp.com",
       projectId: "fart-of-year-b5279",
-      storageBucket: "fart-of-year-b5279.firebasestorage.app",
+      storageBucket: "fart-of-year-b5279.appspot.com",
       messagingSenderId: "643785935219",
       appId: "1:643785935219:web:dac9130e1c1a64b6f19d06",
       measurementId: "G-7C4YLC24K1"
@@ -106,26 +131,26 @@
     const voteSelect = document.getElementById("voteSelect");
     const participantsTable = document.getElementById("participantsTable");
     const totalVotesDisplay = document.getElementById("totalVotes");
+    const top3List = document.getElementById("top3List");
 
-    async function register() {
+    window.register = async function register() {
       const name = nameInput.value.trim();
       const link = linkInput.value.trim();
       if (!name || !link) return alert("Введите имя и ссылку");
 
       await addDoc(collection(db, "participants"), {
-        name: name,
-        link: link,
+        name,
+        link,
         votes: 0
       });
 
       nameInput.value = "";
       linkInput.value = "";
-    }
+    };
 
-    async function vote() {
+    window.vote = async function vote() {
       const id = voteSelect.value;
       const docRef = doc(db, "participants", id);
-
       const allDocs = await getDocs(collection(db, "participants"));
       allDocs.forEach(async (d) => {
         if (d.id === id) {
@@ -133,34 +158,74 @@
           await updateDoc(docRef, { votes: currentVotes + 1 });
         }
       });
-    }
+    };
 
-    onSnapshot(collection(db, "participants"), snapshot => {
+    onSnapshot(collection(db, "participants"), async snapshot => {
       participantsTable.innerHTML = "";
       voteSelect.innerHTML = "";
-
+      top3List.innerHTML = "";
       let totalVotes = 0;
+      const dataArr = [];
+
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
-        const row = `<tr>
-          <td>${data.name}</td>
-          <td><a href="${data.link}" target="_blank">Послушать</a></td>
-          <td>${data.votes}</td>
-        </tr>`;
-        participantsTable.innerHTML += row;
-
-        const option = new Option(data.name, docSnap.id);
-        voteSelect.add(option);
-
-        totalVotes += data.votes;
+        data.id = docSnap.id;
+        dataArr.push(data);
       });
 
+      const sorted = [...dataArr].sort((a, b) => b.votes - a.votes);
+      sorted.slice(0, 3).forEach(p => {
+        const li = document.createElement("li");
+        li.textContent = `${p.name} (${p.votes} голосов)`;
+        top3List.appendChild(li);
+      });
+
+      dataArr.forEach(p => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${p.name}</td>
+          <td><a href="${p.link}" target="_blank">Послушать</a></td>
+          <td>${p.votes}</td>
+          <td><div class="comment-box"><input type="text" placeholder="Оставьте комментарий" id="comment-${p.id}"/><button onclick="submitComment('${p.id}')">Отправить</button></div></td>
+        `;
+        participantsTable.appendChild(row);
+      });
+
+      totalVotes = dataArr.reduce((acc, p) => acc + p.votes, 0);
       totalVotesDisplay.textContent = totalVotes;
     });
 
-    // Делаем доступным из HTML
-    window.register = register;
-    window.vote = vote;
+    window.submitComment = async function submitComment(id) {
+      const commentInput = document.getElementById(`comment-${id}`);
+      const comment = commentInput.value.trim();
+      if (!comment) return alert("Комментарий не может быть пустым!");
+
+      await addDoc(collection(db, "comments"), {
+        participantId: id,
+        text: comment,
+      });
+
+      commentInput.value = ""; // Clear input
+    };
+
+    const jokes = [
+      "Пердун всегда прав, даже если он не прав!",
+      "Никогда не затыкай нос во время пердежа!",
+      "Пердеж — это звук, который может сделать даже супергерой.",
+      "Пердуны — это настоящие супергерои!"
+    ];
+
+    document.getElementById('jokeDisplay').textContent = jokes[Math.floor(Math.random() * jokes.length)];
+
+    window.toggleMusic = function toggleMusic() {
+      const music = document.getElementById("bgMusic");
+      if (music.paused) {
+        music.play();
+      } else {
+        music.pause();
+      }
+    };
   </script>
+
 </body>
 </html>
