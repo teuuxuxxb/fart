@@ -77,6 +77,28 @@
       transform: translateY(2px);
       box-shadow: 1px 2px #444;
     }
+    .fart-bubble {
+      position: absolute;
+      background: #ffcccc;
+      border-radius: 50%;
+      padding: 10px;
+      animation: bubble 1s ease-out forwards;
+      font-weight: bold;
+      color: #000;
+      pointer-events: none;
+    }
+    @keyframes bubble {
+      0% { opacity: 1; transform: scale(1) translateY(0); }
+      100% { opacity: 0; transform: scale(2) translateY(-150px); }
+    }
+    .comment-like {
+      background: #d4edda;
+      border: 1px solid #28a745;
+      margin: 2px;
+      padding: 3px 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
@@ -116,10 +138,9 @@
     </table>
   </div>
 
-  <!-- Фарт-пианинка -->
   <div class="section">
     <h2>Фарт-пианинка</h2>
-    <div id="fartPiano" style="display: flex; justify-content: center; gap: 10px;">
+    <div id="fartPiano" style="display: flex; justify-content: center; gap: 10px; position: relative;">
       <button class="piano-key" onclick="playFart(0)">До</button>
       <button class="piano-key" onclick="playFart(1)">Ре</button>
       <button class="piano-key" onclick="playFart(2)">Ми</button>
@@ -137,12 +158,17 @@
 
   <img src="https://media.tenor.com/V06eZMFzy9wAAAAC/fart-joke.gif" alt="funny fart gif">
   <footer><p>© 2025 Пердуны всего мира, объединяйтесь!</p></footer>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+  import {
+    getDatabase,
+    ref,
+    push,
+    onValue,
+    update,
+  } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-
+  
     const firebaseConfig = {
       apiKey: "AIzaSyBicpiEJcEz62qguIvIkZ4F_ednV4IqEkA",
       authDomain: "fart-of-year-b5279.firebaseapp.com",
@@ -153,151 +179,150 @@
       measurementId: "G-7C4YLC24K1"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const usersRef = ref(db, "users");
 
-    const nameInput = document.getElementById("nameInput");
-    const linkInput = document.getElementById("linkInput");
-    const voteSelect = document.getElementById("voteSelect");
-    const participantsTable = document.getElementById("participantsTable");
-    const totalVotesDisplay = document.getElementById("totalVotes");
-    const top3List = document.getElementById("top3List");
+  let totalVotes = 0;
 
-    window.register = async function register() {
-      const name = nameInput.value.trim();
-      const link = linkInput.value.trim();
-      if (!name || !link) return alert("Введите имя и ссылку");
+  const jokes = [
+    "Почему пердун не в армии? Он уже взрывался!",
+    "Как называется музыкальный стиль пердунов? Пукано!",
+    "Самая громкая нота – пердушная бемоль.",
+    "Впердел и ушёл – вот он, настоящий артист!",
+    "Ударил гром... А это Вася пукнул!",
+  ];
 
-      await addDoc(collection(db, "participants"), {
-        name,
-        link,
-        votes: 0
-      });
+  function getRandomJoke() {
+    const joke = jokes[Math.floor(Math.random() * jokes.length)];
+    document.getElementById("jokeDisplay").innerText = joke;
+  }
 
-      nameInput.value = "";
-      linkInput.value = "";
-    };
+  setInterval(getRandomJoke, 5000);
+  getRandomJoke();
 
-    window.vote = async function vote() {
-      const id = voteSelect.value;
-      const docRef = doc(db, "participants", id);
-      const allDocs = await getDocs(collection(db, "participants"));
-      allDocs.forEach(async (d) => {
-        if (d.id === id) {
-          const currentVotes = d.data().votes || 0;
-          await updateDoc(docRef, { votes: currentVotes + 1 });
-        }
-      });
-    };
+  function register() {
+    const name = document.getElementById("nameInput").value;
+    const link = document.getElementById("linkInput").value;
+    if (!name || !link) return alert("Заполни все поля!");
+    push(usersRef, {
+      name,
+      link,
+      votes: 0,
+      comments: [],
+    });
+  }
 
-    onSnapshot(collection(db, "participants"), async snapshot => {
-      participantsTable.innerHTML = "";
-      voteSelect.innerHTML = "";
-      top3List.innerHTML = "";
-      let totalVotes = 0;
-      const dataArr = [];
+  function vote() {
+    const select = document.getElementById("voteSelect");
+    const userId = select.value;
+    const voteRef = ref(db, "users/" + userId);
+    update(voteRef, {
+      votes: (users[userId].votes || 0) + 1,
+    });
+  }
 
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        data.id = docSnap.id;
-        dataArr.push(data);
-      });
+  function addComment(userId) {
+    const comment = prompt("Напиши свой отзыв:");
+    if (!comment) return;
+    const userRef = ref(db, "users/" + userId);
+    const updatedComments = [...(users[userId].comments || []), { text: comment, likes: 0 }];
+    update(userRef, { comments: updatedComments });
+  }
 
-      const sorted = [...dataArr].sort((a, b) => b.votes - a.votes);
-      sorted.slice(0, 3).forEach(p => {
-        const li = document.createElement("li");
-        li.textContent = `${p.name} (${p.votes} голосов)`;
-        top3List.appendChild(li);
-      });
+  function likeComment(userId, commentIndex) {
+    const userRef = ref(db, "users/" + userId);
+    const updated = [...(users[userId].comments || [])];
+    updated[commentIndex].likes += 1;
+    update(userRef, { comments: updated });
+  }
 
-      sorted.forEach(p => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${p.name}</td>
-          <td><a href="${p.link}" target="_blank">Послушать</a></td>
-          <td>${p.votes}</td>
-          <td>
-            <textarea id="commentInput-${p.id}" placeholder="Ваш комментарий"></textarea>
-            <button onclick="addComment('${p.id}')">Отправить</button>
-            <div id="comments-${p.id}" class="comment-box"></div>
-          </td>
-        `;
-        participantsTable.appendChild(row);
+  let users = {};
 
-        const option = new Option(p.name, p.id);
-        voteSelect.add(option);
-        totalVotes += p.votes;
+  onValue(usersRef, (snapshot) => {
+    const data = snapshot.val() || {};
+    users = data;
+    const select = document.getElementById("voteSelect");
+    const table = document.getElementById("participantsTable");
+    const top3 = document.getElementById("top3List");
+    select.innerHTML = "";
+    table.innerHTML = "";
 
-        onSnapshot(collection(db, `participants/${p.id}/comments`), snap => {
-          const commentBox = document.getElementById(`comments-${p.id}`);
-          commentBox.innerHTML = "";
-          snap.forEach(c => {
-            const div = document.createElement("div");
-            div.textContent = "— " + c.data().text;
-            commentBox.appendChild(div);
-          });
-        });
-      });
+    const userList = Object.entries(data);
+    const sorted = userList.sort((a, b) => (b[1].votes || 0) - (a[1].votes || 0));
+    totalVotes = sorted.reduce((sum, [_, val]) => sum + (val.votes || 0), 0);
+    document.getElementById("totalVotes").innerText = totalVotes;
 
-      totalVotesDisplay.textContent = totalVotes;
+    top3.innerHTML = "";
+    sorted.slice(0, 3).forEach(([_, user], i) => {
+      const li = document.createElement("li");
+      li.textContent = `${i + 1}. ${user.name} — ${user.votes} голосов`;
+      top3.appendChild(li);
     });
 
-    window.addComment = async function(id) {
-      const input = document.getElementById(`commentInput-${id}`);
-      const text = input.value.trim();
-      if (!text) return;
-      await addDoc(collection(db, `participants/${id}/comments`), { text });
-      input.value = "";
-    };
+    for (const [id, user] of Object.entries(data)) {
+      const option = document.createElement("option");
+      option.value = id;
+      option.textContent = user.name;
+      select.appendChild(option);
 
-    const jokes = [
-      "Пердеж — это аплодисменты задницы!",
-      "Лучший пердун — тот, кто сделал это тихо, но громко в сердцах!",
-      "Не тот пердун смешон, кто громко пёрнул, а тот, кто с гордостью ушёл!",
-      "Фарт — не преступление, а искусство!",
-      "Пусть пердёж будет с тобой!",
-      "Вонючесть — это дар, а не проклятие!",
-      "Пердун — это не профессия, а призвание!",
-      "Если услышал — уже поздно.",
-      "Каждый пердун уникален — как снежинка.",
-      "Фарт в толпе — акт смелости.",
-      "Тише едешь — дальше пердишь.",
-      "Громкий пердеж — это к богатству.",
-      "Настоящий друг — тот, кто пердит с тобой.",
-      "Сначала звук, потом слава.",
-      "Пёрнул? Прими аплодисменты.",
-      "Не сдерживай природу — перди!",
-      "Шепот ануса — симфония души.",
-      "Пукай с чувством, с толком, с расстановкой!",
-      "Пердеж объединяет нации.",
-      "Кто не пёрнул — тот не жил!"
-    ];
-    document.getElementById("jokeDisplay").textContent =
-      jokes[Math.floor(Math.random() * jokes.length)];
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${user.name}</td>
+        <td><a href="${user.link}" target="_blank">Слушать</a></td>
+        <td>${user.votes || 0}</td>
+        <td>
+          <button onclick="addComment('${id}')">Коммент</button>
+          ${(user.comments || [])
+            .map((c, i) => `<div class="comment-box">
+              ${c.text}
+              <div class="comment-like" onclick="likeComment('${id}', ${i})">Лайков: ${c.likes}</div>
+            </div>`)
+            .join("")}
+        </td>
+      `;
+      table.appendChild(tr);
+    }
+  });
 
+  const fartSounds = [
+    "https://www.fesliyanstudios.com/play-mp3/387",
+    "https://www.fesliyanstudios.com/play-mp3/389",
+    "https://www.fesliyanstudios.com/play-mp3/388",
+    "https://www.fesliyanstudios.com/play-mp3/390",
+    "https://www.fesliyanstudios.com/play-mp3/391",
+    "https://www.fesliyanstudios.com/play-mp3/392",
+    "https://www.fesliyanstudios.com/play-mp3/393",
+  ];
+
+  function playFart(index) {
+    const audio = new Audio(fartSounds[index]);
+    audio.play();
+    const bubble = document.createElement("div");
+    bubble.className = "fart-bubble";
+    bubble.innerText = "ПУК!";
+    const piano = document.getElementById("fartPiano");
+    piano.appendChild(bubble);
+    setTimeout(() => bubble.remove(), 1000);
+  }
+
+  function toggleMusic() {
     const music = document.getElementById("bgMusic");
-    window.toggleMusic = function () {
-      if (music.paused) music.play();
-      else music.pause();
-    };
+    if (music.paused) {
+      music.play();
+    } else {
+      music.pause();
+    }
+  }
 
-    const fartSoundsList = [
-  "https://www.soundjay.com/human/fart-01.mp3", // До
-  "https://www.soundjay.com/human/fart-02.mp3", // Ре
-  "https://www.soundjay.com/human/fart-03.mp3", // Ми
-  "https://www.soundjay.com/human/fart-04.mp3", // Фа
-  "https://www.soundjay.com/human/fart-05.mp3", // Соль
-  "https://www.soundjay.com/human/fart-06.mp3", // Ля
-  "https://www.soundjay.com/human/fart-07.mp3"  // Си
-];
-
-
-
-
-    window.playFart = function(index) {
-      const audio = new Audio(fartSoundsList[index]);
-      audio.play();
-    };
-  </script>
+  window.vote = vote;
+  window.register = register;
+  window.addComment = addComment;
+  window.likeComment = likeComment;
+  window.playFart = playFart;
+  window.toggleMusic = toggleMusic;
+</script>
 </body>
 </html>
+
+  
