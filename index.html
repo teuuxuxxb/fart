@@ -76,14 +76,8 @@
   <div class="section">
     <h2>Регистрация</h2>
     <input type="text" id="nameInput" placeholder="Имя пердуна">
+    <input type="file" id="audioInput" accept="audio/*">
     <button class="register-button" onclick="register()">Зарегистрироваться</button>
-  </div>
-
-  <div class="section">
-    <h2>Запись аудио</h2>
-    <button class="fart-button" onclick="startRecording()">Начать запись</button>
-    <p class="counter">Запись: <span id="recordingTimer">30</span> секунд</p>
-    <audio id="audioPlayback" controls></audio>
   </div>
 
   <div class="section">
@@ -101,16 +95,9 @@
   <div class="section">
     <h2>Наши Участники</h2>
     <table class="vote-table">
-      <thead><tr><th>Имя</th><th>Голоса</th><th>Комментарии</th></tr></thead>
+      <thead><tr><th>Имя</th><th>Голосов</th><th>Комментарий</th><th>Запись</th></tr></thead>
       <tbody id="participantsTable"></tbody>
     </table>
-  </div>
-
-  <div class="section">
-    <h2>Общие комментарии</h2>
-    <div id="generalComments" class="comment-box"></div>
-    <textarea id="generalCommentInput" placeholder="Ваш комментарий"></textarea>
-    <button onclick="addGeneralComment()">Добавить комментарий</button>
   </div>
 
   <button class="music-button" onclick="toggleMusic()">Вкл/Выкл музыку</button>
@@ -121,9 +108,10 @@
   <img src="https://media.tenor.com/V06eZMFzy9wAAAAC/fart-joke.gif" alt="funny fart gif">
   <footer><p>© 2025 Пердуны всего мира, объединяйтесь!</p></footer>
 
+  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, updateDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 
     const firebaseConfig = {
@@ -141,105 +129,106 @@
     const storage = getStorage(app);
 
     const nameInput = document.getElementById("nameInput");
+    const audioInput = document.getElementById("audioInput");
     const voteSelect = document.getElementById("voteSelect");
     const participantsTable = document.getElementById("participantsTable");
     const totalVotesDisplay = document.getElementById("totalVotes");
     const top3List = document.getElementById("top3List");
-    const audioPlayback = document.getElementById("audioPlayback");
-    const recordingTimerDisplay = document.getElementById("recordingTimer");
-    let mediaRecorder, audioChunks = [];
 
-    // Шутки
+    // Регистрация участника
+    window.register = async function register() {
+      const name = nameInput.value.trim();
+      if (!name || !audioInput.files.length) return alert("Введите имя и загрузите аудио");
+
+      // Загружаем аудио в Firebase Storage
+      const audioFile = audioInput.files[0];
+      const audioRef = ref(storage, 'audio/' + audioFile.name);
+      await uploadBytes(audioRef, audioFile);
+      const audioURL = await getDownloadURL(audioRef);
+
+      // Добавляем участника в Firestore
+      await addDoc(collection(db, "participants"), {
+        name,
+        votes: 0,
+        audioURL
+      });
+
+      nameInput.value = "";
+      audioInput.value = "";
+    };
+
+    // Голосование
+    window.vote = async function vote() {
+      const id = voteSelect.value;
+      const docRef = doc(db, "participants", id);
+      const docSnap = await getDocs(collection(db, "participants"));
+      docSnap.forEach(async (d) => {
+        if (d.id === id) {
+          const currentVotes = d.data().votes || 0;
+          await updateDoc(docRef, { votes: currentVotes + 1 });
+        }
+      });
+    };
+
+    // Обновление списка участников
+    onSnapshot(collection(db, "participants"), async snapshot => {
+      participantsTable.innerHTML = "";
+      voteSelect.innerHTML = "";
+      top3List.innerHTML = "";
+      let totalVotes = 0;
+      const dataArr = [];
+
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        data.id = docSnap.id;
+        dataArr.push(data);
+      });
+
+      const sorted = [...dataArr].sort((a, b) => b.votes - a.votes);
+      sorted.slice(0, 3).forEach(p => {
+        const li = document.createElement("li");
+        li.textContent = `${p.name} (${p.votes} голосов)`;
+        top3List.appendChild(li);
+      });
+
+      dataArr.forEach(p => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${p.name}</td>
+          <td>${p.votes}</td>
+          <td><input type="text" placeholder="Ваш комментарий" id="commentInput-${p.id}" /></td>
+          <td><a href="${p.audioURL}" target="_blank">Прослушать</a></td>
+        `;
+        participantsTable.appendChild(row);
+
+        const option = new Option(p.name, p.id);
+        voteSelect.add(option);
+
+        totalVotes += p.votes;
+      });
+
+      totalVotesDisplay.textContent = totalVotes;
+    });
+
+    // Случайная шутка
     const jokes = [
       "Пердеж — это аплодисменты задницы!",
       "Лучший пердун — тот, кто сделал это тихо, но громко в сердцах!",
       "Не тот пердун смешон, кто громко пёрнул, а тот, кто с гордостью ушёл!",
       "Фарт — не преступление, а искусство!",
-      "Громкий пердеж — это как крутой фейерверк, только для твоего живота.",
-      "Пердун, который не смеется, — это как загадка без разгадки!"
+      "Иногда пердеж — это весь смысл жизни!",
+      "Пердеж в лифте — это маленькое приключение!",
+      "Ты не пердун, если не чувствуешь своего собственного величия!"
     ];
-
-    document.getElementById("jokeDisplay").textContent = jokes[Math.floor(Math.random() * jokes.length)];
-
-    // Запись аудио
-    const startRecording = async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.ondataavailable = event => {
-        audioChunks.push(event.data);
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        audioPlayback.src = audioUrl;
-
-        // Загрузка в Firebase Storage
-        const storageRef = ref(storage, 'audio/' + Date.now() + '.wav');
-        await uploadBytes(storageRef, audioBlob);
-        const audioUrlDownload = await getDownloadURL(storageRef);
-
-        // Запись в Firestore
-        await addDoc(collection(db, "audio"), { url: audioUrlDownload, votes: 0 });
-      };
-
-      mediaRecorder.start();
-      let remainingTime = 30;
-      const timerInterval = setInterval(() => {
-        remainingTime--;
-        recordingTimerDisplay.textContent = remainingTime;
-        if (remainingTime <= 0) {
-          mediaRecorder.stop();
-          clearInterval(timerInterval);
-          alert("Запись завершена!");
-        }
-      }, 1000);
-    };
-
-    // Firebase голосование
-    window.vote = async function vote() {
-      const id = voteSelect.value;
-      const docRef = doc(db, "participants", id);
-      await updateDoc(docRef, { votes: firebase.firestore.FieldValue.increment(1) });
-    };
-
-    // Регистрация участника
-    window.register = async function register() {
-      const name = nameInput.value.trim();
-      if (!name) return alert("Введите имя!");
-      await addDoc(collection(db, "participants"), { name, votes: 0 });
-    };
-
-    // Общие комментарии
-    window.addGeneralComment = async () => {
-      const comment = document.getElementById('generalCommentInput').value;
-      if (comment.trim() === '') return;
-      const commentBox = document.getElementById('generalComments');
-      commentBox.innerHTML += `<div class="comment-box">${comment}</div>`;
-      document.getElementById('generalCommentInput').value = '';
-    };
+    document.getElementById("jokeDisplay").textContent =
+      jokes[Math.floor(Math.random() * jokes.length)];
 
     // Включение/выключение музыки
-    window.toggleMusic = () => {
-      const music = document.getElementById('bgMusic');
+    window.toggleMusic = function () {
+      const music = document.getElementById("bgMusic");
       if (music.paused) music.play();
       else music.pause();
     };
-
-    // Получение участников
-    const getParticipants = async () => {
-      const querySnapshot = await getDocs(collection(db, "participants"));
-      participantsTable.innerHTML = '';
-      querySnapshot.forEach((doc) => {
-        const participant = doc.data();
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${participant.name}</td><td>${participant.votes}</td><td><input type="text" placeholder="Ваш комментарий" /></td>`;
-        participantsTable.appendChild(row);
-      });
-    };
-
-    getParticipants();
   </script>
-
 </body>
 </html>
