@@ -3,19 +3,63 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Фарт-Пианино</title>
+  <title>Пердун Года 2025</title>
   <style>
     body {
       background-color: #00ffcc;
       font-family: "Comic Sans MS", cursive, sans-serif;
+      color: #ff0000;
       text-align: center;
     }
-    .piano-container {
-      position: relative;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 40px;
+    marquee {
+      font-size: 48px;
+      font-weight: bold;
+    }
+    .section {
+      border: 5px dashed #ff00ff;
+      margin: 20px;
+      padding: 15px;
+      background-color: #ffff99;
+    }
+    img {
+      width: 100px;
+    }
+    .counter {
+      font-size: 24px;
+      margin: 10px;
+      color: #000;
+    }
+    .fart-button, .register-button, .music-button {
+      padding: 10px 20px;
+      font-size: 20px;
+      background-color: #ff69b4;
+      border: 3px solid #000;
+      cursor: pointer;
+      margin: 5px;
+    }
+    input, select, textarea {
+      font-size: 18px;
+      padding: 5px;
+      margin: 5px;
+    }
+    .vote-table {
+      margin: 0 auto;
+      border-collapse: collapse;
+    }
+    .vote-table th, .vote-table td {
+      border: 2px solid #000;
+      padding: 5px 10px;
+    }
+    .top3 {
+      background-color: #ffeeba;
+      padding: 10px;
+      margin-bottom: 15px;
+    }
+    .comment-box {
+      background-color: #fff;
+      padding: 10px;
+      margin-top: 5px;
+      border: 2px dashed #000;
     }
     .piano-key {
       width: 60px;
@@ -27,7 +71,6 @@
       font-weight: bold;
       box-shadow: 2px 4px #666;
       transition: all 0.1s ease-in-out;
-      cursor: pointer;
     }
     .piano-key:active {
       background-color: #ffcccc;
@@ -44,22 +87,104 @@
       0% { opacity: 1; transform: translateY(0); }
       100% { opacity: 0; transform: translateY(-100px); }
     }
+    #fartPianoContainer {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+    }
   </style>
 </head>
 <body>
 
-  <h1>Фарт-Пианино</h1>
-  <div id="fartPianoContainer" class="piano-container">
-    <button class="piano-key" onclick="playFart(0)">До</button>
-    <button class="piano-key" onclick="playFart(1)">Ре</button>
-    <button class="piano-key" onclick="playFart(2)">Ми</button>
-    <button class="piano-key" onclick="playFart(3)">Фа</button>
-    <button class="piano-key" onclick="playFart(4)">Соль</button>
-    <button class="piano-key" onclick="playFart(5)">Ля</button>
-    <button class="piano-key" onclick="playFart(6)">Си</button>
+  <marquee scrollamount="10">Добро пожаловать на конкурс "ПЕРДУН ГОДА 2025"!</marquee>
+  <img src="https://media.tenor.com/UoUoOtrRxkMAAAAC/fart.gif" alt="fart gif"/>
+
+  <div class="section">
+    <h2>Случайная шутка дня</h2>
+    <p id="jokeDisplay"></p>
   </div>
 
+  <div class="section">
+    <h2>Регистрация</h2>
+    <input type="text" id="nameInput" placeholder="Имя пердуна">
+    <input type="text" id="linkInput" placeholder="Ссылка на пердеж (YouTube, VK...)">
+    <button class="register-button" onclick="register()">Зарегистрироваться</button>
+  </div>
+
+  <div class="section">
+    <h2>Голосуй за любимого пердуна!</h2>
+    <select id="voteSelect"></select>
+    <button class="fart-button" onclick="vote()">Проголосовать</button>
+    <p class="counter">Всего голосов: <span id="totalVotes">0</span></p>
+  </div>
+
+  <div class="section top3">
+    <h2>Топ-3 Пердуна</h2>
+    <ul id="top3List"></ul>
+  </div>
+
+  <div class="section">
+    <h2>Наши Участники</h2>
+    <table class="vote-table">
+      <thead><tr><th>Имя</th><th>Слушать</th><th>Голоса</th><th>Комментарии</th></tr></thead>
+      <tbody id="participantsTable"></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Фарт-пианинка</h2>
+    <div id="fartPianoContainer">
+      <button class="piano-key" onclick="playFart(0)">До</button>
+      <button class="piano-key" onclick="playFart(1)">Ре</button>
+      <button class="piano-key" onclick="playFart(2)">Ми</button>
+      <button class="piano-key" onclick="playFart(3)">Фа</button>
+      <button class="piano-key" onclick="playFart(4)">Соль</button>
+      <button class="piano-key" onclick="playFart(5)">Ля</button>
+      <button class="piano-key" onclick="playFart(6)">Си</button>
+    </div>
+  </div>
+
+  <button class="music-button" onclick="toggleMusic()">Вкл/Выкл музыку</button>
+  <audio id="bgMusic" loop>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+  </audio>
+
+  <img src="https://media.tenor.com/V06eZMFzy9wAAAAC/fart-joke.gif" alt="funny fart gif">
+  <footer><p>© 2025 Пердуны всего мира, объединяйтесь!</p></footer>
+
   <script>
+    const jokes = [
+      "Пердеж — это аплодисменты задницы!",
+      "Лучший пердун — тот, кто сделал это тихо, но громко в сердцах!",
+      "Не тот пердун смешон, кто громко пёрнул, а тот, кто с гордостью ушёл!",
+      "Фарт — не преступление, а искусство!",
+      "Пусть пердёж будет с тобой!",
+      "Вонючесть — это дар, а не проклятие!",
+      "Пердун — это не профессия, а призвание!",
+      "Если услышал — уже поздно.",
+      "Каждый пердун уникален — как снежинка.",
+      "Фарт в толпе — акт смелости.",
+      "Тише едешь — дальше пердишь.",
+      "Громкий пердеж — это к богатству.",
+      "Настоящий друг — тот, кто пердит с тобой.",
+      "Сначала звук, потом слава.",
+      "Пёрнул? Прими аплодисменты.",
+      "Не сдерживай природу — перди!",
+      "Шепот ануса — симфония души.",
+      "Пукай с чувством, с толком, с расстановкой!",
+      "Пердеж объединяет нации.",
+      "Кто не пёрнул — тот не жил!"
+    ];
+    document.getElementById("jokeDisplay").textContent =
+      jokes[Math.floor(Math.random() * jokes.length)];
+
+    const music = document.getElementById("bgMusic");
+    window.toggleMusic = function () {
+      if (music.paused) music.play();
+      else music.pause();
+    };
+
     const fartSoundsList = [
       "https://www.soundjay.com/human/fart-01.mp3",
       "https://www.soundjay.com/human/fart-02.mp3",
