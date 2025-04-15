@@ -174,22 +174,23 @@
       });
 
       const sorted = [...dataArr].sort((a, b) => b.votes - a.votes);
+
       sorted.slice(0, 3).forEach(p => {
         const li = document.createElement("li");
         li.textContent = `${p.name} (${p.votes} голосов)`;
         top3List.appendChild(li);
       });
 
-      dataArr.forEach(p => {
+      sorted.forEach(p => {
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${p.name}</td>
           <td><a href="${p.link}" target="_blank">Послушать</a></td>
           <td>${p.votes}</td>
           <td>
-            <div id="comments-${p.id}" class="comment-box"></div>
             <textarea id="commentInput-${p.id}" placeholder="Ваш комментарий"></textarea>
             <button onclick="addComment('${p.id}')">Отправить</button>
+            <div id="comments-${p.id}" class="comment-box"></div>
           </td>
         `;
         participantsTable.appendChild(row);
@@ -199,7 +200,7 @@
 
         totalVotes += p.votes;
 
-        // Подгрузка комментариев
+        // Комментарии под полем ввода
         onSnapshot(collection(db, `participants/${p.id}/comments`), snap => {
           const commentBox = document.getElementById(`comments-${p.id}`);
           commentBox.innerHTML = "";
