@@ -150,7 +150,7 @@
       const link = linkInput.value.trim();
       if (!name || !link) return alert("Введите имя и ссылку");
 
-      await addDoc(collection(db, "participants"), {
+      const docRef = await addDoc(collection(db, "participants"), {
         name,
         link,
         votes: 0
@@ -162,14 +162,17 @@
 
     window.vote = async function vote() {
       const id = voteSelect.value;
+      if (!id) return alert("Выберите участника для голосования");
+
       const docRef = doc(db, "participants", id);
-      const allDocs = await getDocs(collection(db, "participants"));
-      allDocs.forEach(async (d) => {
-        if (d.id === id) {
-          const currentVotes = d.data().votes || 0;
-          await updateDoc(docRef, { votes: currentVotes + 1 });
-        }
-      });
+      const docSnap = await getDocs(docRef);
+
+      if (!docSnap.exists()) {
+        return alert("Такого участника не существует");
+      }
+
+      const currentVotes = docSnap.data().votes || 0;
+      await updateDoc(docRef, { votes: currentVotes + 1 });
     };
 
     onSnapshot(collection(db, "participants"), async snapshot => {
@@ -207,6 +210,9 @@
           </td>
         `;
         participantsTable.appendChild(row);
+
+        const option = new Option(p.name, p.id);
+        voteSelect.add(option);
       });
 
       totalVotes = dataArr.reduce((acc, p) => acc + p.votes, 0);
