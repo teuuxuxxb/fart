@@ -12,7 +12,7 @@
       text-align: center;
     }
     marquee {
-      font-size: 60px;
+      font-size: 60px;  /* Увеличил размер шрифта */
       font-weight: bold;
     }
     .section {
@@ -69,7 +69,7 @@
   <img src="https://media.tenor.com/UoUoOtrRxkMAAAAC/fart.gif" alt="fart gif"/>
 
   <div class="section">
-    <h2>Шутка-минутка</h2>
+    <h2>Случайная шутка дня</h2>
     <p id="jokeDisplay"></p>
   </div>
 
@@ -83,7 +83,7 @@
   <div class="section">
     <h2>Голосуй за любимого пердуна!</h2>
     <select id="voteSelect"></select>
-    <button class="fart-button" onclick="vote()">Голосовать</button>
+    <button class="fart-button" onclick="vote()">Проголосовать</button>
     <p class="counter">Всего голосов: <span id="totalVotes">0</span></p>
   </div>
 
@@ -98,6 +98,14 @@
       <thead><tr><th>Имя</th><th>Слушать</th><th>Голоса</th><th>Комментарии</th></tr></thead>
       <tbody id="participantsTable"></tbody>
     </table>
+  </div>
+
+  <!-- Фарт-синтезатор -->
+  <div class="section">
+    <h2>Фарт-синтезатор</h2>
+    <button class="fart-button" onclick="playFart('fart1')">Фарт 1</button>
+    <button class="fart-button" onclick="playFart('fart2')">Фарт 2</button>
+    <button class="fart-button" onclick="playFart('fart3')">Фарт 3</button>
   </div>
 
   <button class="music-button" onclick="toggleMusic()">Вкл/Выкл музыку</button>
@@ -174,23 +182,22 @@
       });
 
       const sorted = [...dataArr].sort((a, b) => b.votes - a.votes);
-
       sorted.slice(0, 3).forEach(p => {
         const li = document.createElement("li");
         li.textContent = `${p.name} (${p.votes} голосов)`;
         top3List.appendChild(li);
       });
 
-      sorted.forEach(p => {
+      dataArr.forEach(p => {
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${p.name}</td>
           <td><a href="${p.link}" target="_blank">Послушать</a></td>
           <td>${p.votes}</td>
           <td>
+            <div id="comments-${p.id}" class="comment-box"></div>
             <textarea id="commentInput-${p.id}" placeholder="Ваш комментарий"></textarea>
             <button onclick="addComment('${p.id}')">Отправить</button>
-            <div id="comments-${p.id}" class="comment-box"></div>
           </td>
         `;
         participantsTable.appendChild(row);
@@ -200,7 +207,7 @@
 
         totalVotes += p.votes;
 
-        // Комментарии под полем ввода
+        // Подгрузка комментариев
         onSnapshot(collection(db, `participants/${p.id}/comments`), snap => {
           const commentBox = document.getElementById(`comments-${p.id}`);
           commentBox.innerHTML = "";
@@ -225,38 +232,11 @@
 
     // Случайная шутка
     const jokes = [
-  "Пердеж — это аплодисменты задницы!",
-  "Лучший пердун — тот, кто сделал это тихо, но громко в сердцах!",
-  "Не тот пердун смешон, кто громко пёрнул, а тот, кто с гордостью ушёл!",
-  "Фарт — не преступление, а искусство!",
-  "Если ты не слышал пердежа — не значит, что его не было.",
-  "Настоящий пердун не боится эха.",
-  "Лучшие пердуны рождаются в тишине.",
-  "Пердёж — язык, понятный всем.",
-  "У каждого есть талант. У кого-то — в звуке.",
-  "Тише едешь — громче пердишь.",
-  "С пердежом по жизни — веселей!",
-  "Не держи в себе — отпусти и пердони!",
-  "Громкий выход — залог успеха.",
-  "Каждый пердун — поэт своей задницы.",
-  "Пердеж — единственный звук, который не требует перевода.",
-  "Чем старше, тем благородней аромат.",
-  "В мире пердежа нет чемпионов — есть легенды.",
-  "Пердун с душой — лучше молчаливого.",
-  "Фарт — это путь к просветлению.",
-  "Истинный пердун не нуждается в оправдании.",
-  "Лучше пукнуть и покраснеть, чем сдержаться и заболеть.",
-  "Великие пердуны не рождаются — они звучат.",
-  "Звук пердежа — это свобода.",
-  "Каждому своё, а мне — пукнуть.",
-  "Пердёж — это протест организма против тишины.",
-  "Тот, кто смеётся над пердежом, смеётся над жизнью.",
-  "Лучшие речи звучат… изнутри.",
-  "Один звук — и ты в истории.",
-  "Фарт громче слов.",
-  "Пердун — это диагноз весельчака!"
-];
-
+      "Пердеж — это аплодисменты задницы!",
+      "Лучший пердун — тот, кто сделал это тихо, но громко в сердцах!",
+      "Не тот пердун смешон, кто громко пёрнул, а тот, кто с гордостью ушёл!",
+      "Фарт — не преступление, а искусство!"
+    ];
     document.getElementById("jokeDisplay").textContent =
       jokes[Math.floor(Math.random() * jokes.length)];
 
@@ -265,6 +245,18 @@
     window.toggleMusic = function () {
       if (music.paused) music.play();
       else music.pause();
+    };
+
+    // Фарт-синтезатор
+    const fartSounds = {
+      fart1: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+      fart2: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+      fart3: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+    };
+
+    window.playFart = function (fart) {
+      const audio = new Audio(fartSounds[fart]);
+      audio.play();
     };
   </script>
 </body>
