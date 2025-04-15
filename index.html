@@ -60,6 +60,18 @@
       padding: 10px;
       margin-top: 5px;
       border: 2px dashed #000;
+      width: 100%;
+    }
+    .comment-list {
+      margin-top: 10px;
+      border-top: 1px dashed #000;
+      padding-top: 10px;
+    }
+    .comment {
+      padding: 5px;
+      background-color: #f2f2f2;
+      margin-bottom: 5px;
+      border-radius: 5px;
     }
   </style>
 </head>
@@ -101,7 +113,7 @@
   </div>
 
   <button class="music-button" onclick="toggleMusic()">Вкл/Выкл музыку</button>
-  <audio id="bgMusic" loop>
+  <audio id="bgMusic" loop autoplay>
     <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
   </audio>
 
@@ -186,7 +198,13 @@
           <td>${p.name}</td>
           <td><a href="${p.link}" target="_blank">Послушать</a></td>
           <td>${p.votes}</td>
-          <td><div class="comment-box"><input type="text" placeholder="Оставьте комментарий" id="comment-${p.id}"/><button onclick="submitComment('${p.id}')">Отправить</button></div></td>
+          <td>
+            <div class="comment-box">
+              <input type="text" placeholder="Оставьте комментарий" id="comment-${p.id}"/>
+              <button onclick="submitComment('${p.id}')">Отправить</button>
+            </div>
+            <div id="comments-${p.id}" class="comment-list"></div>
+          </td>
         `;
         participantsTable.appendChild(row);
       });
