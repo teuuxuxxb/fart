@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Пердун Года 2025</title>
   <style>
     body {
@@ -29,15 +29,14 @@
       margin: 10px;
       color: #000;
     }
-    .fart-button, .register-button, .music-button {
+    .fart-button, .register-button {
       padding: 10px 20px;
       font-size: 20px;
       background-color: #ff69b4;
       border: 3px solid #000;
       cursor: pointer;
-      margin: 5px;
     }
-    input, select, textarea {
+    input, select {
       font-size: 18px;
       padding: 5px;
       margin: 5px;
@@ -50,40 +49,13 @@
       border: 2px solid #000;
       padding: 5px 10px;
     }
-    .top3 {
-      background-color: #ffeeba;
-      padding: 10px;
-      margin-bottom: 15px;
-    }
-    .comment-box {
-      background-color: #fff;
-      padding: 10px;
-      margin-top: 5px;
-      border: 2px dashed #000;
-      width: 100%;
-    }
-    .comment-list {
-      margin-top: 10px;
-      border-top: 1px dashed #000;
-      padding-top: 10px;
-    }
-    .comment {
-      padding: 5px;
-      background-color: #f2f2f2;
-      margin-bottom: 5px;
-      border-radius: 5px;
-    }
   </style>
 </head>
 <body>
 
   <marquee scrollamount="10">Добро пожаловать на конкурс "ПЕРДУН ГОДА 2025"!</marquee>
-  <img src="https://media.tenor.com/UoUoOtrRxkMAAAAC/fart.gif" alt="fart gif"/>
 
-  <div class="section">
-    <h2>Случайная шутка дня</h2>
-    <p id="jokeDisplay"></p>
-  </div>
+  <img src="https://media.tenor.com/UoUoOtrRxkMAAAAC/fart.gif" alt="fart gif">
 
   <div class="section">
     <h2>Регистрация</h2>
@@ -93,162 +65,170 @@
   </div>
 
   <div class="section">
+    <h2>Записать пердеж</h2>
+    <button id="startRecording" class="fart-button">Начать запись</button>
+    <button id="stopRecording" class="fart-button" disabled>Остановить запись</button>
+    <audio id="audioPlayback" controls></audio>
+  </div>
+
+  <div class="section">
     <h2>Голосуй за любимого пердуна!</h2>
     <select id="voteSelect"></select>
     <button class="fart-button" onclick="vote()">Проголосовать</button>
     <p class="counter">Всего голосов: <span id="totalVotes">0</span></p>
   </div>
 
-  <div class="section top3">
-    <h2>Топ-3 Пердуна</h2>
-    <ul id="top3List"></ul>
-  </div>
-
   <div class="section">
     <h2>Наши Участники</h2>
     <table class="vote-table">
-      <thead><tr><th>Имя</th><th>Слушать</th><th>Голоса</th><th>Комментарии</th></tr></thead>
+      <thead>
+        <tr><th>Имя</th><th>Слушать</th><th>Голоса</th></tr>
+      </thead>
       <tbody id="participantsTable"></tbody>
     </table>
   </div>
 
-  <button class="music-button" onclick="toggleMusic()">Вкл/Выкл музыку</button>
-  <audio id="bgMusic" loop autoplay>
-    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
-  </audio>
-
   <img src="https://media.tenor.com/V06eZMFzy9wAAAAC/fart-joke.gif" alt="funny fart gif">
-  <footer><p>© 2025 Пердуны всего мира, объединяйтесь!</p></footer>
+
+  <footer>
+    <p><blink>© 2025 Пердуны всего мира, объединяйтесь!</blink></p>
+  </footer>
 
   <!-- Firebase SDK -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
 
+    // Firebase configuration
     const firebaseConfig = {
-      apiKey: "AIzaSyBicpiEJcEz62qguIvIkZ4F_ednV4IqEkA",
-      authDomain: "fart-of-year-b5279.firebaseapp.com",
-      projectId: "fart-of-year-b5279",
-      storageBucket: "fart-of-year-b5279.appspot.com",
-      messagingSenderId: "643785935219",
-      appId: "1:643785935219:web:dac9130e1c1a64b6f19d06",
-      measurementId: "G-7C4YLC24K1"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
 
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
+    // Ссылки на элементы DOM
     const nameInput = document.getElementById("nameInput");
     const linkInput = document.getElementById("linkInput");
     const voteSelect = document.getElementById("voteSelect");
     const participantsTable = document.getElementById("participantsTable");
     const totalVotesDisplay = document.getElementById("totalVotes");
-    const top3List = document.getElementById("top3List");
 
-    window.register = async function register() {
+    let recorder;
+    let audioStream;
+    const startRecordingButton = document.getElementById('startRecording');
+    const stopRecordingButton = document.getElementById('stopRecording');
+    const audioPlayback = document.getElementById('audioPlayback');
+    
+    startRecordingButton.addEventListener('click', async () => {
+      audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recorder = new MediaRecorder(audioStream);
+
+      const audioChunks = [];
+      recorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+      };
+
+      recorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        audioPlayback.src = audioUrl;
+
+        // Загрузка аудио в Firebase Storage
+        const storageRef = ref(storage, 'farts/' + Date.now() + '.wav');
+        const uploadTask = uploadBytesResumable(storageRef, audioBlob);
+
+        uploadTask.on('state_changed', 
+          (snapshot) => {
+            // Прогресс загрузки
+          }, 
+          (error) => {
+            console.log(error);
+          }, 
+          () => {
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+              console.log('File available at', downloadURL);
+              // Запишем ссылку на аудио в Firestore
+              addDoc(collection(db, "participants"), {
+                name: nameInput.value,
+                link: downloadURL,
+                votes: 0
+              });
+            });
+          }
+        );
+      };
+
+      recorder.start();
+      startRecordingButton.disabled = true;
+      stopRecordingButton.disabled = false;
+    });
+
+    stopRecordingButton.addEventListener('click', () => {
+      recorder.stop();
+      audioStream.getTracks().forEach(track => track.stop());
+      startRecordingButton.disabled = false;
+      stopRecordingButton.disabled = true;
+    });
+
+    async function register() {
       const name = nameInput.value.trim();
       const link = linkInput.value.trim();
       if (!name || !link) return alert("Введите имя и ссылку");
 
-      const docRef = await addDoc(collection(db, "participants"), {
-        name,
-        link,
+      await addDoc(collection(db, "participants"), {
+        name: name,
+        link: link,
         votes: 0
       });
 
       nameInput.value = "";
       linkInput.value = "";
-    };
+    }
 
-    window.vote = async function vote() {
+    async function vote() {
       const id = voteSelect.value;
-      if (!id) return alert("Выберите участника для голосования");
-
       const docRef = doc(db, "participants", id);
-      const docSnap = await getDocs(docRef);
 
-      if (!docSnap.exists()) {
-        return alert("Такого участника не существует");
-      }
+      const allDocs = await getDocs(collection(db, "participants"));
+      allDocs.forEach(async (d) => {
+        if (d.id === id) {
+          const currentVotes = d.data().votes || 0;
+          await updateDoc(docRef, { votes: currentVotes + 1 });
+        }
+      });
+    }
 
-      const currentVotes = docSnap.data().votes || 0;
-      await updateDoc(docRef, { votes: currentVotes + 1 });
-    };
-
-    onSnapshot(collection(db, "participants"), async snapshot => {
+    onSnapshot(collection(db, "participants"), snapshot => {
       participantsTable.innerHTML = "";
       voteSelect.innerHTML = "";
-      top3List.innerHTML = "";
-      let totalVotes = 0;
-      const dataArr = [];
 
+      let totalVotes = 0;
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
-        data.id = docSnap.id;
-        dataArr.push(data);
-      });
+        const row = `<tr>
+          <td>${data.name}</td>
+          <td><a href="${data.link}" target="_blank">Послушать</a></td>
+          <td>${data.votes}</td>
+        </tr>`;
+        participantsTable.innerHTML += row;
 
-      const sorted = [...dataArr].sort((a, b) => b.votes - a.votes);
-      sorted.slice(0, 3).forEach(p => {
-        const li = document.createElement("li");
-        li.textContent = `${p.name} (${p.votes} голосов)`;
-        top3List.appendChild(li);
-      });
-
-      dataArr.forEach(p => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${p.name}</td>
-          <td><a href="${p.link}" target="_blank">Послушать</a></td>
-          <td>${p.votes}</td>
-          <td>
-            <div class="comment-box">
-              <input type="text" placeholder="Оставьте комментарий" id="comment-${p.id}"/>
-              <button onclick="submitComment('${p.id}')">Отправить</button>
-            </div>
-            <div id="comments-${p.id}" class="comment-list"></div>
-          </td>
-        `;
-        participantsTable.appendChild(row);
-
-        const option = new Option(p.name, p.id);
+        const option = new Option(data.name, docSnap.id);
         voteSelect.add(option);
+
+        totalVotes += data.votes;
       });
 
-      totalVotes = dataArr.reduce((acc, p) => acc + p.votes, 0);
       totalVotesDisplay.textContent = totalVotes;
     });
-
-    window.submitComment = async function submitComment(id) {
-      const commentInput = document.getElementById(`comment-${id}`);
-      const comment = commentInput.value.trim();
-      if (!comment) return alert("Комментарий не может быть пустым!");
-
-      await addDoc(collection(db, "comments"), {
-        participantId: id,
-        text: comment,
-      });
-
-      commentInput.value = ""; // Clear input
-    };
-
-    const jokes = [
-      "Пердун всегда прав, даже если он не прав!",
-      "Никогда не затыкай нос во время пердежа!",
-      "Пердеж — это звук, который может сделать даже супергерой.",
-      "Пердуны — это настоящие супергерои!"
-    ];
-
-    document.getElementById('jokeDisplay').textContent = jokes[Math.floor(Math.random() * jokes.length)];
-
-    window.toggleMusic = function toggleMusic() {
-      const music = document.getElementById("bgMusic");
-      if (music.paused) {
-        music.play();
-      } else {
-        music.pause();
-      }
-    };
   </script>
 
 </body>
