@@ -1,168 +1,168 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Пердун Года 2025</title>
-  <style>
-    body {
-      background-color: #00ffcc;
-      font-family: "Comic Sans MS", cursive, sans-serif;
-      color: #ff0000;
-      text-align: center;
-    }
-    marquee {
-      font-size: 24px;
-      font-weight: bold;
-    }
-    .section {
-      border: 5px dashed #ff00ff;
-      margin: 20px;
-      padding: 15px;
-      background-color: #ffff99;
-    }
-    img {
-      width: 100px;
-    }
-    .counter {
-      font-size: 24px;
-      margin: 10px;
-      color: #000;
-    }
-    .fart-button, .register-button {
-      padding: 10px 20px;
-      font-size: 20px;
-      background-color: #ff69b4;
-      border: 3px solid #000;
-      cursor: pointer;
-    }
-    input, select {
-      font-size: 18px;
-      padding: 5px;
-      margin: 5px;
-    }
-    .vote-table {
-      margin: 0 auto;
-      border-collapse: collapse;
-    }
-    .vote-table th, .vote-table td {
-      border: 2px solid #000;
-      padding: 5px 10px;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Пердун Года 2025</title>
+  <style>
+    body {
+      background-color: #00ffcc;
+      font-family: "Comic Sans MS", cursive, sans-serif;
+      color: #ff0000;
+      text-align: center;
+    }
+    marquee {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .section {
+      border: 5px dashed #ff00ff;
+      margin: 20px;
+      padding: 15px;
+      background-color: #ffff99;
+    }
+    img {
+      width: 100px;
+    }
+    .counter {
+      font-size: 24px;
+      margin: 10px;
+      color: #000;
+    }
+    .fart-button, .register-button {
+      padding: 10px 20px;
+      font-size: 20px;
+      background-color: #ff69b4;
+      border: 3px solid #000;
+      cursor: pointer;
+    }
+    input, select {
+      font-size: 18px;
+      padding: 5px;
+      margin: 5px;
+    }
+    .vote-table {
+      margin: 0 auto;
+      border-collapse: collapse;
+    }
+    .vote-table th, .vote-table td {
+      border: 2px solid #000;
+      padding: 5px 10px;
+    }
+  </style>
 </head>
 <body>
 
-  <marquee scrollamount="10">Добро пожаловать на конкурс "ПЕРДУН ГОДА 2025"!</marquee>
+  <marquee scrollamount="10">Добро пожаловать на конкурс "ПЕРДУН ГОДА 2025"!</marquee>
 
-  <img src="https://media.tenor.com/UoUoOtrRxkMAAAAC/fart.gif" alt="fart gif">
+  <img src="https://media.tenor.com/UoUoOtrRxkMAAAAC/fart.gif" alt="fart gif">
 
-  <div class="section">
-    <h2>Регистрация</h2>
-    <input type="text" id="nameInput" placeholder="Имя пердуна">
-    <input type="text" id="linkInput" placeholder="Ссылка на пердеж (YouTube, VK...)">
-    <button class="register-button" onclick="register()">Зарегистрироваться</button>
-  </div>
+  <div class="section">
+    <h2>Регистрация</h2>
+    <input type="text" id="nameInput" placeholder="Имя пердуна">
+    <input type="text" id="linkInput" placeholder="Ссылка на пердеж (YouTube, VK...)">
+    <button class="register-button" onclick="register()">Зарегистрироваться</button>
+  </div>
 
-  <div class="section">
-    <h2>Голосуй за любимого пердуна!</h2>
-    <select id="voteSelect"></select>
-    <button class="fart-button" onclick="vote()">Проголосовать</button>
-    <p class="counter">Всего голосов: <span id="totalVotes">0</span></p>
-  </div>
+  <div class="section">
+    <h2>Голосуй за любимого пердуна!</h2>
+    <select id="voteSelect"></select>
+    <button class="fart-button" onclick="vote()">Проголосовать</button>
+    <p class="counter">Всего голосов: <span id="totalVotes">0</span></p>
+  </div>
 
-  <div class="section">
-    <h2>Наши Участники</h2>
-    <table class="vote-table">
-      <thead>
-        <tr><th>Имя</th><th>Слушать</th><th>Голоса</th></tr>
-      </thead>
-      <tbody id="participantsTable"></tbody>
-    </table>
-  </div>
+  <div class="section">
+    <h2>Наши Участники</h2>
+    <table class="vote-table">
+      <thead>
+        <tr><th>Имя</th><th>Слушать</th><th>Голоса</th></tr>
+      </thead>
+      <tbody id="participantsTable"></tbody>
+    </table>
+  </div>
 
-  <img src="https://media.tenor.com/V06eZMFzy9wAAAAC/fart-joke.gif" alt="funny fart gif">
+  <img src="https://media.tenor.com/V06eZMFzy9wAAAAC/fart-joke.gif" alt="funny fart gif">
 
-  <footer>
-    <p><blink>© 2025 Пердуны всего мира, объединяйтесь!</blink></p>
-  </footer>
+  <footer>
+    <p><blink>© 2025 Пердуны всего мира, объединяйтесь!</blink></p>
+  </footer>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBicpiEJcEz62qguIvIkZ4F_ednV4IqEkA",
-      authDomain: "fart-of-year-b5279.firebaseapp.com",
-      projectId: "fart-of-year-b5279",
-      storageBucket: "fart-of-year-b5279.firebasestorage.app",
-      messagingSenderId: "643785935219",
-      appId: "1:643785935219:web:dac9130e1c1a64b6f19d06",
-      measurementId: "G-7C4YLC24K1"
-    };
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBicpiEJcEz62qguIvIkZ4F_ednV4IqEkA",
+      authDomain: "fart-of-year-b5279.firebaseapp.com",
+      projectId: "fart-of-year-b5279",
+      storageBucket: "fart-of-year-b5279.firebasestorage.app",
+      messagingSenderId: "643785935219",
+      appId: "1:643785935219:web:dac9130e1c1a64b6f19d06",
+      measurementId: "G-7C4YLC24K1"
+    };
 
-    // Инициализация Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    // Инициализация Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    const nameInput = document.getElementById("nameInput");
-    const linkInput = document.getElementById("linkInput");
-    const voteSelect = document.getElementById("voteSelect");
-    const participantsTable = document.getElementById("participantsTable");
-    const totalVotesDisplay = document.getElementById("totalVotes");
+    const nameInput = document.getElementById("nameInput");
+    const linkInput = document.getElementById("linkInput");
+    const voteSelect = document.getElementById("voteSelect");
+    const participantsTable = document.getElementById("participantsTable");
+    const totalVotesDisplay = document.getElementById("totalVotes");
 
-    // Регистрация пользователя
-    async function register() {
-      const name = nameInput.value.trim();
-      const link = linkInput.value.trim();
-      if (!name || !link) return alert("Введите имя и ссылку");
+    // Регистрация пользователя
+    async function register() {
+      const name = nameInput.value.trim();
+      const link = linkInput.value.trim();
+      if (!name || !link) return alert("Введите имя и ссылку");
 
-      await db.collection("participants").add({
-        name: name,
-        link: link,
-        votes: 0
-      });
+      await db.collection("participants").add({
+        name: name,
+        link: link,
+        votes: 0
+      });
 
-      nameInput.value = "";
-      linkInput.value = "";
-    }
+      nameInput.value = "";
+      linkInput.value = "";
+    }
 
-    // Голосование
-    async function vote() {
-      const id = voteSelect.value;
-      const docRef = db.collection("participants").doc(id);
+    // Голосование
+    async function vote() {
+      const id = voteSelect.value;
+      const docRef = db.collection("participants").doc(id);
 
-      const docSnap = await docRef.get();
-      if (docSnap.exists) {
-        const currentVotes = docSnap.data().votes || 0;
-        await docRef.update({ votes: currentVotes + 1 });
-      }
-    }
+      const docSnap = await docRef.get();
+      if (docSnap.exists) {
+        const currentVotes = docSnap.data().votes || 0;
+        await docRef.update({ votes: currentVotes + 1 });
+      }
+    }
 
-    // Слушаем изменения базы данных
-    db.collection("participants").onSnapshot(snapshot => {
-      participantsTable.innerHTML = "";
-      voteSelect.innerHTML = "";
+    // Слушаем изменения базы данных
+    db.collection("participants").onSnapshot(snapshot => {
+      participantsTable.innerHTML = "";
+      voteSelect.innerHTML = "";
 
-      let totalVotes = 0;
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const row = `<tr>
-          <td>${data.name}</td>
-          <td><a href="${data.link}" target="_blank">Послушать</a></td>
-          <td>${data.votes}</td>
-        </tr>`;
-        participantsTable.innerHTML += row;
+      let totalVotes = 0;
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const row = `<tr>
+          <td>${data.name}</td>
+          <td><a href="${data.link}" target="_blank">Послушать</a></td>
+          <td>${data.votes}</td>
+        </tr>`;
+        participantsTable.innerHTML += row;
 
-        const option = new Option(data.name, docSnap.id);
-        voteSelect.add(option);
+        const option = new Option(data.name, docSnap.id);
+        voteSelect.add(option);
 
-        totalVotes += data.votes;
-      });
+        totalVotes += data.votes;
+      });
 
-      totalVotesDisplay.textContent = totalVotes;
-    });
-  </script>
+      totalVotesDisplay.textContent = totalVotes;
+    });
+  </script>
 
 </body>
 </html>
