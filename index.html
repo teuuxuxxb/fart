@@ -12,7 +12,7 @@
       text-align: center;
     }
     marquee {
-      font-size: 60px;  /* Увеличил размер шрифта */
+      font-size: 48px;
       font-weight: bold;
     }
     .section {
@@ -61,6 +61,22 @@
       margin-top: 5px;
       border: 2px dashed #000;
     }
+    .piano-key {
+      width: 60px;
+      height: 120px;
+      background-color: #fff;
+      border: 3px solid #000;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 2px 4px #666;
+      transition: all 0.1s ease-in-out;
+    }
+    .piano-key:active {
+      background-color: #ffcccc;
+      transform: translateY(2px);
+      box-shadow: 1px 2px #444;
+    }
   </style>
 </head>
 <body>
@@ -100,12 +116,18 @@
     </table>
   </div>
 
-  <!-- Фарт-синтезатор -->
+  <!-- Фарт-пианинка -->
   <div class="section">
-    <h2>Фарт-синтезатор</h2>
-    <button class="fart-button" onclick="playFart('fart1')">Фарт 1</button>
-    <button class="fart-button" onclick="playFart('fart2')">Фарт 2</button>
-    <button class="fart-button" onclick="playFart('fart3')">Фарт 3</button>
+    <h2>Фарт-пианинка</h2>
+    <div id="fartPiano" style="display: flex; justify-content: center; gap: 10px;">
+      <button class="piano-key" onclick="playFart(0)">До</button>
+      <button class="piano-key" onclick="playFart(1)">Ре</button>
+      <button class="piano-key" onclick="playFart(2)">Ми</button>
+      <button class="piano-key" onclick="playFart(3)">Фа</button>
+      <button class="piano-key" onclick="playFart(4)">Соль</button>
+      <button class="piano-key" onclick="playFart(5)">Ля</button>
+      <button class="piano-key" onclick="playFart(6)">Си</button>
+    </div>
   </div>
 
   <button class="music-button" onclick="toggleMusic()">Вкл/Выкл музыку</button>
@@ -188,26 +210,24 @@
         top3List.appendChild(li);
       });
 
-      dataArr.forEach(p => {
+      sorted.forEach(p => {
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${p.name}</td>
           <td><a href="${p.link}" target="_blank">Послушать</a></td>
           <td>${p.votes}</td>
           <td>
-            <div id="comments-${p.id}" class="comment-box"></div>
             <textarea id="commentInput-${p.id}" placeholder="Ваш комментарий"></textarea>
             <button onclick="addComment('${p.id}')">Отправить</button>
+            <div id="comments-${p.id}" class="comment-box"></div>
           </td>
         `;
         participantsTable.appendChild(row);
 
         const option = new Option(p.name, p.id);
         voteSelect.add(option);
-
         totalVotes += p.votes;
 
-        // Подгрузка комментариев
         onSnapshot(collection(db, `participants/${p.id}/comments`), snap => {
           const commentBox = document.getElementById(`comments-${p.id}`);
           commentBox.innerHTML = "";
@@ -230,32 +250,49 @@
       input.value = "";
     };
 
-    // Случайная шутка
     const jokes = [
       "Пердеж — это аплодисменты задницы!",
       "Лучший пердун — тот, кто сделал это тихо, но громко в сердцах!",
       "Не тот пердун смешон, кто громко пёрнул, а тот, кто с гордостью ушёл!",
-      "Фарт — не преступление, а искусство!"
+      "Фарт — не преступление, а искусство!",
+      "Пусть пердёж будет с тобой!",
+      "Вонючесть — это дар, а не проклятие!",
+      "Пердун — это не профессия, а призвание!",
+      "Если услышал — уже поздно.",
+      "Каждый пердун уникален — как снежинка.",
+      "Фарт в толпе — акт смелости.",
+      "Тише едешь — дальше пердишь.",
+      "Громкий пердеж — это к богатству.",
+      "Настоящий друг — тот, кто пердит с тобой.",
+      "Сначала звук, потом слава.",
+      "Пёрнул? Прими аплодисменты.",
+      "Не сдерживай природу — перди!",
+      "Шепот ануса — симфония души.",
+      "Пукай с чувством, с толком, с расстановкой!",
+      "Пердеж объединяет нации.",
+      "Кто не пёрнул — тот не жил!"
     ];
     document.getElementById("jokeDisplay").textContent =
       jokes[Math.floor(Math.random() * jokes.length)];
 
-    // Музыка
     const music = document.getElementById("bgMusic");
     window.toggleMusic = function () {
       if (music.paused) music.play();
       else music.pause();
     };
 
-    // Фарт-синтезатор
-    const fartSounds = {
-      fart1: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-      fart2: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-      fart3: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
-    };
+    const fartSoundsList = [
+      "https://www.myinstants.com/media/sounds/fart-with-reverb.mp3",
+      "https://www.myinstants.com/media/sounds/fart.mp3",
+      "https://www.myinstants.com/media/sounds/super-fart.mp3",
+      "https://www.myinstants.com/media/sounds/fart-noise.mp3",
+      "https://www.myinstants.com/media/sounds/fart-sound-effect.mp3",
+      "https://www.myinstants.com/media/sounds/epic-fart.mp3",
+      "https://www.myinstants.com/media/sounds/fartwet.mp3"
+    ];
 
-    window.playFart = function (fart) {
-      const audio = new Audio(fartSounds[fart]);
+    window.playFart = function(index) {
+      const audio = new Audio(fartSoundsList[index]);
       audio.play();
     };
   </script>
