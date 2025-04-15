@@ -160,6 +160,8 @@
     // Голосование
     window.vote = async function vote() {
       const id = voteSelect.value;
+      if (!id) return alert("Выберите участника для голосования");
+
       const docRef = doc(db, "participants", id);
       const docSnap = await getDocs(collection(db, "participants"));
       docSnap.forEach(async (d) => {
